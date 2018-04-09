@@ -44,4 +44,4 @@ Benchmark100Chars-8     	 1000000	      1547 ns/op
 Benchmark10Chars-8      	 1000000	      1511 ns/op
 ```
 
-1.5ms are wasted no matter what size of the message.
+1.5µs are wasted no matter what size of the message.
