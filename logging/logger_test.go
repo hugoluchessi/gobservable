@@ -2,6 +2,7 @@ package logging
 
 import (
 	"bytes"
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -135,6 +136,34 @@ func TestAsyncWrites(t *testing.T) {
 			continue
 		}
 		validateMsgRegex(t, expectedRegex, msg)
+	}
+}
+
+type ErrorReturningWriter struct {
+}
+
+func (f *ErrorReturningWriter) Write(p []byte) (n int, err error) {
+	return 0, errors.New("Some random error")
+}
+
+func TestWhenStreamGeneratesAnError(t *testing.T) {
+	exctx := exctx.Create()
+	b := &ErrorReturningWriter{}
+	l := NewDefaultLogger(b)
+	msg := "New logger!"
+
+	err := l.Warn(exctx, msg)
+
+	if err != nil {
+		t.Errorf("Test failed, no error, got '%s'", err.Error())
+	}
+
+	time.Sleep(10 * time.Millisecond)
+
+	err = l.Warn(exctx, msg)
+
+	if err == nil {
+		t.Error("Test failed, error, got nil")
 	}
 }
 

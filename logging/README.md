@@ -9,7 +9,7 @@ l := logger.NewDefaultLogger(os.Stdout)
 
 exctx := exctx.Create() // Creates an ExecutionContext (further docs aboutn this on the way)
 
-l.Log(exctx, "Hello Logger!")
+err := l.Log(exctx, "Hello Logger!")
 ```
 
 Using this example the output will be:
