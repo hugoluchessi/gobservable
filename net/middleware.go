@@ -4,6 +4,12 @@ import (
 	"net/http"
 )
 
-type Middleware interface {
-	BuildHandler(http.Handler) http.Handler
+type MiddlewareFunc func(http.Handler) http.Handler
+
+type middleware struct {
+	fn MiddlewareFunc
+}
+
+func (m *middleware) BuildHandler(h http.Handler) http.Handler {
+	return m.fn(h)
 }

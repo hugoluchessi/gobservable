@@ -2,34 +2,41 @@ package net
 
 import (
 	"net/http"
+	"sync"
 )
 
-type MiddlewareFunc func(http.Handler) http.Handler
-
 type Router struct {
-	middlewares []Middleware
+	basepath    string
+	middlewares []*middleware
 	routes      []Route
+	lock        sync.RWMutex
 }
 
-func NewRouter() *Router {
-	return &Router{[]Middleware{}, []Route{}}
+func NewRouter(path string) *Router {
+	return &Router{path, []*middleware{}, []Route{}, sync.RWMutex{}}
 }
 
 func (r *Router) Get(path string, handler http.Handler) {
-	route := Route{"GET", path, handler}
-	r.routes = append(r.routes, route)
+	r.Handle("GET", path, handler)
 }
 
 func (r *Router) Post(path string, handler http.Handler) {
-	route := Route{"POST", path, handler}
-	r.routes = append(r.routes, route)
+	r.Handle("POST", path, handler)
 }
 
 func (r *Router) Handle(method string, path string, handler http.Handler) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	route := Route{method, path, handler}
 	r.routes = append(r.routes, route)
 }
 
-func (r *Router) Use(mw Middleware) {
+func (r *Router) Use(mwf MiddlewareFunc) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	mw := &middleware{mwf}
+
 	r.middlewares = append(r.middlewares, mw)
 }

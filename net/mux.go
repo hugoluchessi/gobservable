@@ -2,6 +2,8 @@ package net
 
 import (
 	"net/http"
+	"path"
+	"sync"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -9,10 +11,21 @@ import (
 type Mux struct {
 	routers    []*Router
 	mainrouter *httprouter.Router
+	lock       sync.RWMutex
 }
 
 func NewMux() *Mux {
-	return &Mux{[]*Router{}, nil}
+	return &Mux{[]*Router{}, nil, sync.RWMutex{}}
+}
+
+func (mux *Mux) AddRouter(path string) *Router {
+	mux.lock.Lock()
+	defer mux.lock.Unlock()
+
+	router := NewRouter(path)
+	mux.routers = append(mux.routers, router)
+
+	return router
 }
 
 func (mux *Mux) ServeHTTP(res http.ResponseWriter, req *http.Request) {
@@ -28,13 +41,18 @@ func (mux *Mux) getMainRouterInstance() *httprouter.Router {
 }
 
 func (mux *Mux) createMainRouterInstance() {
+	mux.mainrouter = httprouter.New()
+
 	for _, router := range mux.routers {
 		routerroutes := router.buildRoutes()
 
 		for _, route := range routerroutes {
 			mux.mainrouter.Handle(
 				route.method,
-				route.path,
+				// Ensure path starts with /
+				path.Join("/", router.basepath, route.path),
+
+				//FIXME: Ignore params for now
 				func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 					route.handler.ServeHTTP(res, req)
 				},
@@ -44,18 +62,16 @@ func (mux *Mux) createMainRouterInstance() {
 }
 
 func (r *Router) buildRoutes() []Route {
-	var builtroute Route
-	var handlers http.Handler
-	builtroutes := make([]Route, len(r.routes))
+	builtroutes := make([]Route, 0)
 
 	for _, route := range r.routes {
-		handlers = route.handler
+		builtroute := Route{route.method, route.path, nil}
+		builtroute.handler = route.handler
 
-		for i := len(r.middlewares) - 1; i >= 0; i-- {
-			handlers = r.middlewares[i].BuildHandler(handlers)
+		for _, middleware := range r.middlewares {
+			builtroute.handler = middleware.BuildHandler(builtroute.handler)
 		}
 
-		builtroute = Route{route.method, route.path, handlers}
 		builtroutes = append(builtroutes, builtroute)
 	}
 
