@@ -49,9 +49,7 @@ func (mux *Mux) createMainRouterInstance() {
 		for _, route := range routerroutes {
 			mux.mainrouter.Handle(
 				route.method,
-				// Ensure path starts with /
-				path.Join("/", router.basepath, route.path),
-
+				route.path,
 				//FIXME: Ignore params for now
 				func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 					route.handler.ServeHTTP(res, req)
@@ -65,7 +63,9 @@ func (r *Router) buildRoutes() []Route {
 	builtroutes := make([]Route, 0)
 
 	for _, route := range r.routes {
-		builtroute := Route{route.method, route.path, nil}
+		// Ensure path starts with /
+		p := path.Join("/", r.basepath, route.path, "/")
+		builtroute := Route{route.method, p, nil}
 		builtroute.handler = route.handler
 
 		for _, middleware := range r.middlewares {

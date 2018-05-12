@@ -7,6 +7,26 @@ import (
 	"testing"
 )
 
+const GET = "GET"
+const POST = "POST"
+const RouterBasePath1 = "v1"
+const RouterBasePath2 = "v2"
+const RoutePath1 = "somepath"
+const RoutePath2 = "otherpath"
+const RouteHeaderKey1 = "X-Route"
+const RouteHeaderKey2 = "X-Route-2"
+const MiddlewareHeaderKey1 = "X-Middleware"
+const MiddlewareHeaderKey2 = "X-Middleware-2"
+const HeadersExpectedValue = "YEAH!"
+
+func CheckHeader(t *testing.T, res http.ResponseWriter, key string, expectedvalue string) {
+	value := res.Header().Get(key)
+
+	if value != expectedvalue {
+		t.Errorf("Test failed, invalid '%s' header value, got '%s' expected '%s'.", key, value, expectedvalue)
+	}
+}
+
 func TestNewMux(t *testing.T) {
 	mux := NewMux()
 
@@ -30,11 +50,9 @@ func TestAddRouter(t *testing.T) {
 }
 
 func TestAddMutlipleRouters(t *testing.T) {
-	path := "v1"
-	path2 := "v2"
 	mux := NewMux()
-	router := mux.AddRouter(path)
-	router2 := mux.AddRouter(path2)
+	router := mux.AddRouter(RouterBasePath1)
+	router2 := mux.AddRouter(RouterBasePath2)
 
 	if len(mux.routers) != 2 {
 		t.Error("Test failed, there must be two routers on mux.")
@@ -50,9 +68,7 @@ func TestAddMutlipleRouters(t *testing.T) {
 }
 
 func TestServeHTTPNoRouters(t *testing.T) {
-	method := "GET"
-	path := "somepath"
-	req, _ := http.NewRequest(method, path, nil)
+	req, _ := http.NewRequest(GET, RouterBasePath1, nil)
 	res := httptest.NewRecorder()
 
 	mux := NewMux()
@@ -61,79 +77,123 @@ func TestServeHTTPNoRouters(t *testing.T) {
 }
 
 func TestServeHTTPOneRouterNoRoutesNoMiddlewares(t *testing.T) {
-	method := "GET"
-	path := "somepath"
-	req, _ := http.NewRequest(method, path, nil)
+	req, _ := http.NewRequest(GET, RouterBasePath1, nil)
 	res := httptest.NewRecorder()
 
 	mux := NewMux()
-	_ = mux.AddRouter(path)
+	_ = mux.AddRouter(RouterBasePath1)
 
 	mux.ServeHTTP(res, req)
 }
 
 func TestServeHTTPOneRouterOneRouteNoMiddlewares(t *testing.T) {
-	method := "GET"
-	routerpath := "/basepath"
-	route := "/somepath"
-	req, _ := http.NewRequest(method, path.Join(routerpath, route), nil)
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
 	res := httptest.NewRecorder()
 
-	headerkey := "X-Route"
-	expectedheadervalue := "Passed on Route!"
-
 	mux := NewMux()
-	router := mux.AddRouter(routerpath)
-	router.Get(route, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.Header().Add(headerkey, expectedheadervalue)
+	router := mux.AddRouter(RouterBasePath1)
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
 	}))
 
 	mux.ServeHTTP(res, req)
 
-	headervalue := res.Header().Get(headerkey)
-
-	if headervalue != expectedheadervalue {
-		t.Errorf("Test failed, invalid '%s' header value, got '%s' expected '%s'.", headerkey, headervalue, expectedheadervalue)
-	}
+	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
 }
 
 func TestServeHTTPOneRouterOneRouteOneMiddleware(t *testing.T) {
-	method := "GET"
-	routerpath := "/basepath"
-	route := "/somepath"
-	req, _ := http.NewRequest(method, path.Join(routerpath, route), nil)
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
 	res := httptest.NewRecorder()
 
-	routeheaderkey := "X-Route"
-	expectedrouteheadervalue := "Passed on Route!"
-
-	middlewareheaderkey := "X-Middleware"
-	expectedmiddlewareheadervalue := "Passed on Middleware!"
-
 	mux := NewMux()
-	router := mux.AddRouter(routerpath)
-	router.Get(route, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		middlewareheadervalue := res.Header().Get(middlewareheaderkey)
+	router := mux.AddRouter(RouterBasePath1)
 
-		if middlewareheadervalue != expectedmiddlewareheadervalue {
-			t.Errorf("Test failed, invalid '%s' header value, got '%s' expected '%s'.", middlewareheaderkey, middlewareheadervalue, expectedmiddlewareheadervalue)
-		}
-
-		rw.Header().Add(routeheaderkey, expectedrouteheadervalue)
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		CheckHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
 	}))
 
 	router.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.Header().Add(middlewareheaderkey, expectedmiddlewareheadervalue)
+			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
 			h.ServeHTTP(rw, req)
 		})
 	})
 
 	mux.ServeHTTP(res, req)
 
-	routeheadervalue := res.Header().Get(routeheaderkey)
+	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+}
 
-	if routeheadervalue != expectedrouteheadervalue {
-		t.Errorf("Test failed, invalid '%s' header value, got '%s' expected '%s'.", routeheaderkey, routeheadervalue, expectedrouteheadervalue)
-	}
+func TestServeHTTPOneRouterOneRouteTwoMiddlewares(t *testing.T) {
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
+	res := httptest.NewRecorder()
+
+	mux := NewMux()
+	router := mux.AddRouter(RouterBasePath1)
+
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		CheckHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		CheckHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
+	}))
+
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			CheckHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+
+			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Header().Add(MiddlewareHeaderKey2, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	mux.ServeHTTP(res, req)
+
+	CheckHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
+	CheckHeader(t, res, MiddlewareHeaderKey2, HeadersExpectedValue)
+	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+}
+
+func Func1(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+}
+
+func Func2(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+}
+
+func TestServeHTTPOneRouterTwoRouteOneMiddleware(t *testing.T) {
+	mux := NewMux()
+	router := mux.AddRouter(RouterBasePath1)
+
+	router.Get(RoutePath1, http.HandlerFunc(Func1))
+
+	router.Get(RoutePath2, http.HandlerFunc(Func2))
+
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
+	res := httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+
+	req, _ = http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath2), nil)
+	res = httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	CheckHeader(t, res, RouteHeaderKey2, HeadersExpectedValue)
 }
