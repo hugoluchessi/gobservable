@@ -19,7 +19,7 @@ const MiddlewareHeaderKey1 = "X-Middleware"
 const MiddlewareHeaderKey2 = "X-Middleware-2"
 const HeadersExpectedValue = "YEAH!"
 
-func CheckHeader(t *testing.T, res http.ResponseWriter, key string, expectedvalue string) {
+func AssertHeader(t *testing.T, res http.ResponseWriter, key string, expectedvalue string) {
 	value := res.Header().Get(key)
 
 	if value != expectedvalue {
@@ -98,7 +98,7 @@ func TestServeHTTPOneRouterOneRouteNoMiddlewares(t *testing.T) {
 
 	mux.ServeHTTP(res, req)
 
-	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
 }
 
 func TestServeHTTPOneRouterOneRouteOneMiddleware(t *testing.T) {
@@ -109,7 +109,7 @@ func TestServeHTTPOneRouterOneRouteOneMiddleware(t *testing.T) {
 	router := mux.AddRouter(RouterBasePath1)
 
 	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		CheckHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
 		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
 	}))
 
@@ -122,7 +122,7 @@ func TestServeHTTPOneRouterOneRouteOneMiddleware(t *testing.T) {
 
 	mux.ServeHTTP(res, req)
 
-	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
 }
 
 func TestServeHTTPOneRouterOneRouteTwoMiddlewares(t *testing.T) {
@@ -133,15 +133,15 @@ func TestServeHTTPOneRouterOneRouteTwoMiddlewares(t *testing.T) {
 	router := mux.AddRouter(RouterBasePath1)
 
 	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		CheckHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
-		CheckHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		AssertHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
 
 		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
 	}))
 
 	router.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			CheckHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+			AssertHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
 
 			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
 			h.ServeHTTP(rw, req)
@@ -157,16 +157,37 @@ func TestServeHTTPOneRouterOneRouteTwoMiddlewares(t *testing.T) {
 
 	mux.ServeHTTP(res, req)
 
-	CheckHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
-	CheckHeader(t, res, MiddlewareHeaderKey2, HeadersExpectedValue)
-	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, MiddlewareHeaderKey2, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
 }
 
-func Func1(rw http.ResponseWriter, r *http.Request) {
-	rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+func TestServeHTTPOneRouterTwoRouteNoMiddleware(t *testing.T) {
+	mux := NewMux()
+	router := mux.AddRouter(RouterBasePath1)
+
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
+	}))
+
+	router.Post(RoutePath2, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+	}))
+
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
+	res := httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+
+	req, _ = http.NewRequest(POST, path.Join("/", RouterBasePath1, RoutePath2), nil)
+	res = httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	AssertHeader(t, res, RouteHeaderKey2, HeadersExpectedValue)
 }
 
-func Func2(rw http.ResponseWriter, r *http.Request) {
+func FuncWithMid2(rw http.ResponseWriter, r *http.Request) {
 	rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
 }
 
@@ -174,9 +195,15 @@ func TestServeHTTPOneRouterTwoRouteOneMiddleware(t *testing.T) {
 	mux := NewMux()
 	router := mux.AddRouter(RouterBasePath1)
 
-	router.Get(RoutePath1, http.HandlerFunc(Func1))
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
+	}))
 
-	router.Get(RoutePath2, http.HandlerFunc(Func2))
+	router.Get(RoutePath2, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+	}))
 
 	router.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -189,11 +216,92 @@ func TestServeHTTPOneRouterTwoRouteOneMiddleware(t *testing.T) {
 	res := httptest.NewRecorder()
 	mux.ServeHTTP(res, req)
 
-	CheckHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
 
 	req, _ = http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath2), nil)
 	res = httptest.NewRecorder()
 	mux.ServeHTTP(res, req)
 
-	CheckHeader(t, res, RouteHeaderKey2, HeadersExpectedValue)
+	AssertHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey2, HeadersExpectedValue)
+}
+
+func TestServeHTTPOneRouterOneRouteTwoMiddleware(t *testing.T) {
+	mux := NewMux()
+	router := mux.AddRouter(RouterBasePath1)
+
+	router.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
+	}))
+
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			AssertHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	router.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Header().Add(MiddlewareHeaderKey2, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
+	res := httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	AssertHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+}
+
+func TestServeHTTPTwoRoutersOneRouteOneMiddleware(t *testing.T) {
+	mux := NewMux()
+	router1 := mux.AddRouter(RouterBasePath1)
+	router2 := mux.AddRouter(RouterBasePath2)
+
+	router1.Get(RoutePath1, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		AssertHeader(t, rw, MiddlewareHeaderKey1, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey1, HeadersExpectedValue)
+	}))
+
+	router1.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Header().Add(MiddlewareHeaderKey1, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	router2.Get(RoutePath2, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		AssertHeader(t, rw, MiddlewareHeaderKey2, HeadersExpectedValue)
+		rw.Header().Add(RouteHeaderKey2, HeadersExpectedValue)
+	}))
+
+	router2.Use(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Header().Add(MiddlewareHeaderKey2, HeadersExpectedValue)
+			h.ServeHTTP(rw, req)
+		})
+	})
+
+	req, _ := http.NewRequest(GET, path.Join("/", RouterBasePath1, RoutePath1), nil)
+	res := httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	AssertHeader(t, res, MiddlewareHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey1, HeadersExpectedValue)
+	AssertHeader(t, res, MiddlewareHeaderKey2, "")
+	AssertHeader(t, res, RouteHeaderKey2, "")
+
+	req, _ = http.NewRequest(GET, path.Join("/", RouterBasePath2, RoutePath2), nil)
+	res = httptest.NewRecorder()
+	mux.ServeHTTP(res, req)
+
+	AssertHeader(t, res, MiddlewareHeaderKey1, "")
+	AssertHeader(t, res, RouteHeaderKey1, "")
+	AssertHeader(t, res, MiddlewareHeaderKey2, HeadersExpectedValue)
+	AssertHeader(t, res, RouteHeaderKey2, HeadersExpectedValue)
 }

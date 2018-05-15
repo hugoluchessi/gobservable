@@ -8,6 +8,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type HandleFunc func(http.Handler) httprouter.Handle
+
 type Mux struct {
 	routers    []*Router
 	mainrouter *httprouter.Router
@@ -41,6 +43,9 @@ func (mux *Mux) getMainRouterInstance() *httprouter.Router {
 }
 
 func (mux *Mux) createMainRouterInstance() {
+	mux.lock.Lock()
+	defer mux.lock.Unlock()
+
 	mux.mainrouter = httprouter.New()
 
 	for _, router := range mux.routers {
@@ -50,10 +55,12 @@ func (mux *Mux) createMainRouterInstance() {
 			mux.mainrouter.Handle(
 				route.method,
 				route.path,
-				//FIXME: Ignore params for now
-				func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-					route.handler.ServeHTTP(res, req)
-				},
+				// FIXME: Ignore params for now
+				HandleFunc(func(h http.Handler) httprouter.Handle {
+					return func(res http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+						h.ServeHTTP(res, req)
+					}
+				})(route.handler),
 			)
 		}
 	}
@@ -64,9 +71,8 @@ func (r *Router) buildRoutes() []Route {
 
 	for _, route := range r.routes {
 		// Ensure path starts with /
-		p := path.Join("/", r.basepath, route.path, "/")
-		builtroute := Route{route.method, p, nil}
-		builtroute.handler = route.handler
+		p := path.Join("/", r.basepath, route.path)
+		builtroute := Route{route.method, p, route.handler}
 
 		for _, middleware := range r.middlewares {
 			builtroute.handler = middleware.BuildHandler(builtroute.handler)
