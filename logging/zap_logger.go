@@ -42,42 +42,60 @@ func buildZapCore(cfg LoggerConfig) zapcore.Core {
 		return lvl >= lm[cfg.l]
 	})
 
-	syncer := zapcore.AddSync(cfg.w)
-	if !cfg.ts {
-		syncer = zapcore.Lock(syncer)
-	}
-
+	syncer := zapcore.Lock(zapcore.AddSync(cfg.w))
 	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	return zapcore.NewCore(encoder, syncer, priority)
 }
 
 func (l *ZapLogger) Debug(ctx *exctx.ExecutionContext, msg string, params map[string]string) {
-	logargs := maps.MergeStringMaps(executionContextParams(l.c, ctx), params)
-	l.z.Debugw(msg, logargs)
+	zapp := l.buildZapParams(ctx, params)
+	l.z.Debugw(msg, zapp...)
 }
 
 func (l *ZapLogger) Info(ctx *exctx.ExecutionContext, msg string, params map[string]string) {
-	logargs := maps.MergeStringMaps(executionContextParams(l.c, ctx), params)
-	l.z.Infow(msg, logargs)
+	zapp := l.buildZapParams(ctx, params)
+	l.z.Infow(msg, zapp...)
 }
 
 func (l *ZapLogger) Warn(ctx *exctx.ExecutionContext, msg string, params map[string]string) {
-	logargs := maps.MergeStringMaps(executionContextParams(l.c, ctx), params)
-	l.z.Warnw(msg, logargs)
+	zapp := l.buildZapParams(ctx, params)
+	l.z.Warnw(msg, zapp...)
 }
 
 func (l *ZapLogger) Error(ctx *exctx.ExecutionContext, msg string, params map[string]string) {
-	logargs := maps.MergeStringMaps(executionContextParams(l.c, ctx), params)
-	l.z.Errorw(msg, logargs)
+	zapp := l.buildZapParams(ctx, params)
+	l.z.Errorw(msg, zapp...)
 }
 
 func (l *ZapLogger) Fatal(ctx *exctx.ExecutionContext, msg string, params map[string]string) {
-	logargs := maps.MergeStringMaps(executionContextParams(l.c, ctx), params)
-	l.z.Fatalw(msg, logargs)
+	zapp := l.buildZapParams(ctx, params)
+	l.z.Fatalw(msg, zapp...)
 }
 
 func (l *ZapLogger) Flush() {
 	l.z.Sync()
+}
+
+func (l *ZapLogger) buildZapParams(ctx *exctx.ExecutionContext, params map[string]string) []interface{} {
+	ctxp := executionContextParams(l.c, ctx)
+	logp := maps.MergeStringMaps(ctxp, params)
+
+	return flattenParams(logp)
+}
+
+func flattenParams(params map[string]string) []interface{} {
+	zapp := make([]interface{}, len(params) * 2)
+
+	i := 0
+
+	for k, v := range params {
+		zapp[i] = k
+		i++
+		zapp[i] = v
+		i++
+	}
+
+	return zapp
 }
 
 func executionContextParams(c *clock.Clock, ctx *exctx.ExecutionContext) map[string]string {
