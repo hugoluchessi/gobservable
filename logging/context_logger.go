@@ -25,11 +25,17 @@ func (cl *ContextLogger) Error(ctx context.Context, msg string, params map[strin
 }
 
 func logMsg(logFn func(string, map[string]interface{}), ctx context.Context, msg string, params map[string]interface{}) {
-	tid, _ := tctx.TransactionID(ctx)
-	tms, _ := tctx.TransactionStartTimestamp(ctx)
+	tid, err := tctx.TransactionID(ctx)
 
-	params["tid"] = tid
-	params["tms"] = tms
+	if err == nil {
+		params["tid"] = tid
+	}
+
+	tms, err := tctx.TransactionStartTimestamp(ctx)
+
+	if err == nil {
+		params["tms"] = tms.UnixNano()
+	}
 
 	logFn(msg, params)
 }

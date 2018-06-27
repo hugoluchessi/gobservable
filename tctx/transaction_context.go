@@ -3,6 +3,7 @@ package tctx
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,17 +24,17 @@ func TransactionID(ctx context.Context) (uuid.UUID, error) {
 	return tid.(uuid.UUID), nil
 }
 
-func TransactionStartTimestamp(ctx context.Context) (int64, error) {
+func TransactionStartTimestamp(ctx context.Context) (time.Time, error) {
 	tms := ctx.Value(transactionStartTimestampKey{})
 
 	if tms == nil {
-		return 0, errors.New(TmsNotFound)
+		return time.Now(), errors.New(TmsNotFound)
 	}
 
-	return tms.(int64), nil
+	return tms.(time.Time), nil
 }
 
-func CreateTransactionContext(ctx context.Context, id uuid.UUID, t int64) context.Context {
+func CreateTransactionContext(ctx context.Context, id uuid.UUID, t time.Time) context.Context {
 	ctx = createTransactionIDContext(ctx, id)
 	ctx = createTransactionStartTimestampContext(ctx, t)
 	return ctx
@@ -43,6 +44,6 @@ func createTransactionIDContext(ctx context.Context, id uuid.UUID) context.Conte
 	return context.WithValue(ctx, transactionIDKey{}, id)
 }
 
-func createTransactionStartTimestampContext(ctx context.Context, t int64) context.Context {
+func createTransactionStartTimestampContext(ctx context.Context, t time.Time) context.Context {
 	return context.WithValue(ctx, transactionStartTimestampKey{}, t)
 }

@@ -3,6 +3,7 @@ package tctx
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -10,10 +11,9 @@ import (
 func TestCreateTransactionContext(t *testing.T) {
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
-	var ts int64
-	ts = 1000
+	tms := time.Now()
 
-	nctx := CreateTransactionContext(ctx, id, ts)
+	nctx := CreateTransactionContext(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
@@ -23,10 +23,9 @@ func TestCreateTransactionContext(t *testing.T) {
 func TestTransactionID(t *testing.T) {
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
-	var ts int64
-	ts = 1000
+	tms := time.Now()
 
-	nctx := CreateTransactionContext(ctx, id, ts)
+	nctx := CreateTransactionContext(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
@@ -42,28 +41,23 @@ func TestTransactionID(t *testing.T) {
 func TestTransactionStartTimestamp(t *testing.T) {
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
-	var ts int64
-	ts = 1000
+	tms := time.Now()
 
-	nctx := CreateTransactionContext(ctx, id, ts)
+	nctx := CreateTransactionContext(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
 	}
 
-	nts, _ := TransactionStartTimestamp(nctx)
+	ntms, _ := TransactionStartTimestamp(nctx)
 
-	if nts != ts {
-		t.Errorf("Wrong value for transaction id. Expected '%d' got '%d'.", ts, nts)
+	if ntms != tms {
+		t.Errorf("Wrong value for transaction id. Expected '%s' got '%s'.", tms, ntms)
 	}
 }
 
 func TestTransactionIDInvalid(t *testing.T) {
 	ctx := context.TODO()
-
-	if nctx == nil {
-		t.Error("[ctx] cannot be nil.")
-	}
 
 	_, err := TransactionID(ctx)
 
@@ -74,14 +68,15 @@ func TestTransactionIDInvalid(t *testing.T) {
 
 func TestTransactionStartTimestampInvalid(t *testing.T) {
 	ctx := context.TODO()
+	tms := time.Now()
 
-	if nctx == nil {
-		t.Error("[ctx] cannot be nil.")
-	}
-
-	_, err := TransactionStartTimestamp(ctx)
+	ntms, err := TransactionStartTimestamp(ctx)
 
 	if err == nil {
 		t.Error("TransactionStartTimestamp id should not be found")
+	}
+
+	if tms.UnixNano() > ntms.UnixNano() {
+		t.Error("Wrong TransactionStartTimestamp")
 	}
 }
