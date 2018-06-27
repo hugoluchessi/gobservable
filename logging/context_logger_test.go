@@ -25,7 +25,7 @@ func TestContextLoggerLog(t *testing.T) {
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
 	ts := time.Now()
-	ctx = tctx.CreateTransactionContext(ctx, id, ts)
+	ctx = tctx.Create(ctx, id, ts)
 
 	ctxl := NewContextLogger(l)
 
@@ -71,7 +71,7 @@ func TestContextLoggerError(t *testing.T) {
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
 	ts := time.Now()
-	ctx = tctx.CreateTransactionContext(ctx, id, ts)
+	ctx = tctx.Create(ctx, id, ts)
 
 	ctxl := NewContextLogger(l)
 

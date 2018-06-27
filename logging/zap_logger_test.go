@@ -11,7 +11,7 @@ func TestNewZapLogger(t *testing.T) {
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
 
-	cfg := LoggerConfig{Log, w}
+	cfg := LoggerConfig{w}
 	cfgs := []LoggerConfig{cfg}
 
 	l := NewZapLogger(cfgs)
@@ -21,9 +21,9 @@ func TestNewZapLogger(t *testing.T) {
 	}
 }
 
-func createZapLoggingContext(lvl LogLevel) (*bytes.Buffer, *ZapLogger) {
+func createZapLoggingContext() (*bytes.Buffer, *ZapLogger) {
 	var b bytes.Buffer
-	cfg := LoggerConfig{lvl, &b}
+	cfg := LoggerConfig{&b}
 	cfgs := []LoggerConfig{cfg}
 
 	l := NewZapLogger(cfgs)
@@ -32,7 +32,7 @@ func createZapLoggingContext(lvl LogLevel) (*bytes.Buffer, *ZapLogger) {
 }
 
 func TestZapLog(t *testing.T) {
-	b, l := createZapLoggingContext(Log)
+	b, l := createZapLoggingContext()
 
 	l.Log(
 		"Message test",
@@ -61,56 +61,8 @@ func TestZapLog(t *testing.T) {
 	}
 }
 
-func TestZapLogWithErrorConfig(t *testing.T) {
-	b, l := createZapLoggingContext(Error)
-
-	l.Log(
-		"Message test",
-		map[string]interface{}{
-			"test1": "value1",
-			"test2": "value2",
-		},
-	)
-
-	content := b.String()
-
-	if content != "" {
-		t.Error("Content must be empty.")
-	}
-}
-
 func TestZapError(t *testing.T) {
-	b, l := createZapLoggingContext(Log)
-
-	l.Error(
-		"Message test",
-		map[string]interface{}{
-			"test1": "value1",
-			"test2": "value2",
-		},
-	)
-
-	content := b.String()
-
-	ell := "\"level\":\"error\""
-	etest1 := "\"test1\":\"value1\""
-	etest2 := "\"test2\":\"value2\""
-
-	if !strings.Contains(content, ell) {
-		t.Error("Wrong log level.")
-	}
-
-	if !strings.Contains(content, etest1) {
-		t.Error("Wrong test map params 1.")
-	}
-
-	if !strings.Contains(content, etest2) {
-		t.Error("Wrong test map params 2.")
-	}
-}
-
-func TestZapErrorWithErrorConfig(t *testing.T) {
-	b, l := createZapLoggingContext(Error)
+	b, l := createZapLoggingContext()
 
 	l.Error(
 		"Message test",

@@ -5,11 +5,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var lm = map[LogLevel]zapcore.Level{
-	Log:   zapcore.InfoLevel,
-	Error: zapcore.ErrorLevel,
-}
-
 type ZapLogger struct {
 	z *zap.SugaredLogger
 }
@@ -30,7 +25,7 @@ func NewZapLogger(cfgs []LoggerConfig) *ZapLogger {
 
 func buildZapCore(cfg LoggerConfig) zapcore.Core {
 	priority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= lm[cfg.l]
+		return lvl >= zapcore.InfoLevel
 	})
 
 	syncer := zapcore.Lock(zapcore.AddSync(cfg.w))
