@@ -12,8 +12,8 @@ import (
 
 const tidNotFound = "Transaction ID not found."
 const tmsNotFound = "Transaction Started timestamp not found."
-const tidHeaderKey = "X-TransactionContext"
-const tmsHeaderKey = "X-TransactionStartTimestamp"
+const tidHeaderKey = "X-Transaction-Context-Id"
+const tmsHeaderKey = "X-Transaction-Start-Timestamp"
 const tidHeaderNotFound = "Transaction ID not found."
 const tmsHeaderNotFound = "Transaction Started timestamp not found."
 
