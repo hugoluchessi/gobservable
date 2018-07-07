@@ -20,7 +20,7 @@ func TestMockLog(t *testing.T) {
 		"Message test",
 		map[string]interface{}{
 			"test1": "value1",
-			"test2": "value2",
+			"test2": 321654,
 		},
 	)
 
@@ -28,7 +28,7 @@ func TestMockLog(t *testing.T) {
 
 	ell := "level: 0"
 	etest1 := "test1: value1"
-	etest2 := "test2: value2"
+	etest2 := "test2: 321654"
 
 	if !strings.Contains(content, ell) {
 		t.Error("Wrong log level.")

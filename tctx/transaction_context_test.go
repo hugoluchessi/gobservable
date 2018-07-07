@@ -3,6 +3,7 @@ package tctx
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
@@ -138,7 +139,56 @@ func TestAddRequestHeadersInvalidContextWithTID(t *testing.T) {
 	}
 }
 
-func TestFromRequest(t *testing.T) {
+func TestAddResponseHeaders(t *testing.T) {
+	res := httptest.NewRecorder()
+
+	ctx := context.TODO()
+	tid, _ := uuid.NewRandom()
+	tms := time.Now()
+
+	tctx := Create(ctx, tid, tms)
+
+	_ = AddResponseHeaders(tctx, res)
+
+	htid := res.Header().Get(tidHeaderKey)
+	htms, _ := strconv.ParseInt(res.Header().Get(tmsHeaderKey), 10, 64)
+
+	if htid != tid.String() {
+		t.Errorf("Invalid Transaction ID header, expected '%s' got '%s'.", tid.String(), htid)
+	}
+
+	if htms != tms.UnixNano() {
+		t.Errorf("Invalid Transaction Timestamp started header, expected '%d' got '%d'.", tms.UnixNano(), htms)
+	}
+}
+
+func TestAddResponseHeadersInvalidContext(t *testing.T) {
+	res := httptest.NewRecorder()
+
+	ctx := context.TODO()
+
+	err := AddResponseHeaders(ctx, res)
+
+	if err == nil {
+		t.Error("Invalid context must generate error.")
+	}
+}
+
+func TestAddResponseHeadersInvalidContextWithTID(t *testing.T) {
+	res := httptest.NewRecorder()
+	tid, _ := uuid.NewRandom()
+
+	ctx := context.TODO()
+	ctx = createTransactionIDContext(ctx, tid)
+
+	err := AddResponseHeaders(ctx, res)
+
+	if err == nil {
+		t.Error("Invalid context must generate error.")
+	}
+}
+
+func TestFromRequestHeaders(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -149,7 +199,7 @@ func TestFromRequest(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	tctx, _ := FromRequest(req)
+	tctx, _ := FromRequestHeaders(req)
 
 	ctid, _ := TransactionID(tctx)
 	ctms, _ := TransactionStartTimestamp(tctx)
@@ -163,7 +213,7 @@ func TestFromRequest(t *testing.T) {
 	}
 }
 
-func TestFromRequestEmptyTID(t *testing.T) {
+func TestFromRequestHeadersEmptyTID(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -173,14 +223,14 @@ func TestFromRequestEmptyTID(t *testing.T) {
 	req.Header.Add(tidHeaderKey, "")
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
 	}
 }
 
-func TestFromRequestIEmptyTMS(t *testing.T) {
+func TestFromRequestHeadersIEmptyTMS(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -190,14 +240,14 @@ func TestFromRequestIEmptyTMS(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, "")
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")
 	}
 }
 
-func TestFromRequestNoTIDHeader(t *testing.T) {
+func TestFromRequestHeadersNoTIDHeader(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -206,14 +256,14 @@ func TestFromRequestNoTIDHeader(t *testing.T) {
 
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
 	}
 }
 
-func TestFromRequestINoTMSHeader(t *testing.T) {
+func TestFromRequestHeadersINoTMSHeader(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -222,14 +272,14 @@ func TestFromRequestINoTMSHeader(t *testing.T) {
 
 	req.Header.Add(tidHeaderKey, tid.String())
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")
 	}
 }
 
-func TestFromRequestInvalidTID(t *testing.T) {
+func TestFromRequestHeadersInvalidTID(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -239,14 +289,14 @@ func TestFromRequestInvalidTID(t *testing.T) {
 	req.Header.Add(tidHeaderKey, "something")
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
 	}
 }
 
-func TestFromRequestInvalidTMS(t *testing.T) {
+func TestFromRequestHeadersInvalidTMS(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
@@ -256,7 +306,7 @@ func TestFromRequestInvalidTMS(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, "something")
 
-	_, err := FromRequest(req)
+	_, err := FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")

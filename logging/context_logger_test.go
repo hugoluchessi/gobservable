@@ -41,7 +41,7 @@ func TestContextLoggerLog(t *testing.T) {
 
 	ell := "level: 0"
 	tid := fmt.Sprintf("tid: %s", id)
-	tms := fmt.Sprintf("tms: %s", ts.UnixNano())
+	tms := fmt.Sprintf("tms: %d", ts.UnixNano())
 	etest1 := "test1: value1"
 	etest2 := "test2: value2"
 
@@ -87,7 +87,7 @@ func TestContextLoggerError(t *testing.T) {
 
 	ell := "level: 1"
 	tid := fmt.Sprintf("tid: %s", id)
-	tms := fmt.Sprintf("tms: %s", ts.UnixNano())
+	tms := fmt.Sprintf("tms: %d", ts.UnixNano())
 	etest1 := "test1: value1"
 	etest2 := "test2: value2"
 

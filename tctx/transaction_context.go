@@ -12,8 +12,8 @@ import (
 
 const tidNotFound = "Transaction ID not found."
 const tmsNotFound = "Transaction Started timestamp not found."
-const tidHeaderKey = "X-Transaction-Context-Id"
-const tmsHeaderKey = "X-Transaction-Start-Timestamp"
+const tidHeaderKey = "GOTK-Transaction-Context-Id"
+const tmsHeaderKey = "GOTK-Transaction-Start-Timestamp"
 const tidHeaderNotFound = "Transaction ID not found."
 const tmsHeaderNotFound = "Transaction Started timestamp not found."
 
@@ -40,7 +40,7 @@ func TransactionStartTimestamp(ctx context.Context) (time.Time, error) {
 	return tms.(time.Time), nil
 }
 
-func FromRequest(req *http.Request) (context.Context, error) {
+func FromRequestHeaders(req *http.Request) (context.Context, error) {
 	ctx := req.Context()
 
 	htid := req.Header.Get(tidHeaderKey)
@@ -87,6 +87,25 @@ func AddRequestHeaders(ctx context.Context, req *http.Request) error {
 
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
+
+	return nil
+}
+
+func AddResponseHeaders(ctx context.Context, rw http.ResponseWriter) error {
+	tid, err := TransactionID(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	tms, err := TransactionStartTimestamp(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	rw.Header().Add(tidHeaderKey, tid.String())
+	rw.Header().Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
 	return nil
 }

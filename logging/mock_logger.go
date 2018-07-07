@@ -32,6 +32,18 @@ func mockLogMsg(w io.Writer, lvl LogLevel, msg string, params []interface{}) {
 	fmt.Fprintf(w, "msg: %s ", msg)
 
 	for i := 0; i < len(params); i += 2 {
-		fmt.Fprintf(w, "%s: %s ", params[i], params[i+1])
+		key := params[i]
+		value := params[i+1]
+
+		switch value.(type) {
+		case int:
+			fmt.Fprintf(w, "%s: %d ", key, value)
+		case int64:
+			fmt.Fprintf(w, "%s: %d ", key, value)
+		default:
+			fmt.Fprintf(w, "%s: %s ", key, value)
+		}
 	}
+
+	fmt.Fprintf(w, "\n")
 }

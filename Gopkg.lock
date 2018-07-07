@@ -8,14 +8,33 @@
   version = "0.2"
 
 [[projects]]
-  name = "github.com/julienschmidt/httprouter"
+  name = "go.uber.org/atomic"
   packages = ["."]
-  revision = "8c199fb6259ffc1af525cc3ad52ee60ba8359669"
-  version = "v1.1"
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore"
+  ]
+  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
+  version = "v1.8.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6b85cc9d734e001fc48306b1bf281001808d1b81c4bb449a8ddf38675c9d0241"
+  inputs-digest = "66163ba0573a183d77fc30dce59c64e78213a96406bd81ce84c8887985add442"
   solver-name = "gps-cdcl"
   solver-version = 1
