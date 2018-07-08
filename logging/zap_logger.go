@@ -28,7 +28,7 @@ func buildZapCore(cfg LoggerConfig) zapcore.Core {
 		return lvl >= zapcore.InfoLevel
 	})
 
-	syncer := zapcore.Lock(zapcore.AddSync(cfg.w))
+	syncer := zapcore.Lock(zapcore.AddSync(cfg.Output))
 	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	return zapcore.NewCore(encoder, syncer, priority)
 }
