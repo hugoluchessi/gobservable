@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/hugoluchessi/gotoolkit/gttime"
-	"github.com/hugoluchessi/gotoolkit/tctx"
 )
 
 const (
@@ -32,17 +31,11 @@ func NewContextLoggerMiddleware(l *ContextLogger) *ContextLoggerMiddleware {
 
 func (mw *ContextLoggerMiddleware) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		tctx, err := tctx.FromRequestHeaders(req)
 		startTime := time.Now()
-
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			rw.Write([]byte(tidNotFoundMsg))
-			return
-		}
+		ctx := req.Context()
 
 		mw.l.Log(
-			tctx,
+			ctx,
 			requestStartedMsg,
 			map[string]interface{}{
 				requestHostLogEntry:       req.Host,
@@ -57,7 +50,7 @@ func (mw *ContextLoggerMiddleware) Handler(h http.Handler) http.Handler {
 		endTime := time.Now()
 
 		mw.l.Log(
-			tctx,
+			ctx,
 			requestEndedMsg,
 			map[string]interface{}{
 				requestDurationMilliseconds: gttime.ElapsedMilliseconds(startTime, endTime),
