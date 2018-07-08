@@ -10,6 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+func TestNewTransactionContextMiddleware(t *testing.T) {
+	mw := NewTransactionContextMiddleware()
+
+	if mw == nil {
+		t.Error("NewTransactionContextMiddleware cannot return nil.")
+	}
+}
+
 func TestContextLoggerHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
@@ -35,7 +43,8 @@ func TestContextLoggerHandler(t *testing.T) {
 		}
 	})
 
-	mwh := TransactionContextHandler(h)
+	mw := NewTransactionContextMiddleware()
+	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
 
@@ -71,7 +80,8 @@ func TestContextLoggerHandlerWithoutHeaders(t *testing.T) {
 		}
 	})
 
-	mwh := TransactionContextHandler(h)
+	mw := NewTransactionContextMiddleware()
+	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
 

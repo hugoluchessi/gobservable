@@ -13,6 +13,17 @@ import (
 	"github.com/hugoluchessi/gotoolkit/tctx"
 )
 
+func TestNewContextLoggerMiddleware(t *testing.T) {
+	l := NewMockLogger()
+	ctxl := NewContextLogger(l)
+
+	mw := NewContextLoggerMiddleware(ctxl)
+
+	if mw == nil {
+		t.Error("NewContextLoggerMiddleware cannot return nil.")
+	}
+}
+
 func TestContextLoggerHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	res := httptest.NewRecorder()
@@ -31,7 +42,8 @@ func TestContextLoggerHandler(t *testing.T) {
 
 	tctx.AddRequestHeaders(ctx, req)
 
-	mwh := ContextLoggerHandler(ctxl, h)
+	mw := NewContextLoggerMiddleware(ctxl)
+	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
 
@@ -92,7 +104,8 @@ func TestContextLoggerHandlerWithoutContext(t *testing.T) {
 	l := NewZapLogger(cfgs)
 	ctxl := NewContextLogger(l)
 
-	mwh := ContextLoggerHandler(ctxl, h)
+	mw := NewContextLoggerMiddleware(ctxl)
+	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
 

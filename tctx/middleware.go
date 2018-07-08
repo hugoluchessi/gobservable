@@ -7,7 +7,13 @@ import (
 	"github.com/google/uuid"
 )
 
-func TransactionContextHandler(h http.Handler) http.Handler {
+type TransactionContextMiddleware struct{}
+
+func NewTransactionContextMiddleware() *TransactionContextMiddleware {
+	return &TransactionContextMiddleware{}
+}
+
+func (mw *TransactionContextMiddleware) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx, err := FromRequestHeaders(req)
 

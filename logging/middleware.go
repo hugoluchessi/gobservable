@@ -22,9 +22,17 @@ const (
 	requestDurationMilliseconds = "durationMs"
 )
 
-func ContextLoggerHandler(l *ContextLogger, h http.Handler) http.Handler {
+type ContextLoggerMiddleware struct {
+	l *ContextLogger
+}
+
+func NewContextLoggerMiddleware(l *ContextLogger) *ContextLoggerMiddleware {
+	return &ContextLoggerMiddleware{l}
+}
+
+func (mw *ContextLoggerMiddleware) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		tctx, err := tctx.FromRequest(req)
+		tctx, err := tctx.FromRequestHeaders(req)
 		startTime := time.Now()
 
 		if err != nil {
@@ -33,7 +41,7 @@ func ContextLoggerHandler(l *ContextLogger, h http.Handler) http.Handler {
 			return
 		}
 
-		l.Log(
+		mw.l.Log(
 			tctx,
 			requestStartedMsg,
 			map[string]interface{}{
@@ -48,7 +56,7 @@ func ContextLoggerHandler(l *ContextLogger, h http.Handler) http.Handler {
 		h.ServeHTTP(rw, req)
 		endTime := time.Now()
 
-		l.Log(
+		mw.l.Log(
 			tctx,
 			requestEndedMsg,
 			map[string]interface{}{
