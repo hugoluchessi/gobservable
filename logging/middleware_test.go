@@ -1,4 +1,4 @@
-package logging
+package logging_test
 
 import (
 	"bufio"
@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hugoluchessi/gotoolkit/logging"
 	"github.com/hugoluchessi/gotoolkit/tctx"
 )
 
 func TestNewContextLoggerMiddleware(t *testing.T) {
-	l := NewMockLogger()
-	ctxl := NewContextLogger(l)
+	l := logging.NewMockLogger()
+	ctxl := logging.NewContextLogger(l)
 
-	mw := NewContextLoggerMiddleware(ctxl)
+	mw := logging.NewContextLoggerMiddleware(ctxl)
 
 	if mw == nil {
 		t.Error("NewContextLoggerMiddleware cannot return nil.")
@@ -32,17 +33,27 @@ func TestContextLoggerHandler(t *testing.T) {
 		rw.Header().Set("some", "test")
 	})
 
-	l := NewMockLogger()
-	ctxl := NewContextLogger(l)
+	l := logging.NewMockLogger()
+	ctxl := logging.NewContextLogger(l)
 
 	tid := uuid.New()
 	tms := time.Now()
 	ctx := req.Context()
 	ctx = tctx.Create(ctx, tid, tms)
 
+	requestStartedMsg := "Request Started"
+	requestEndedMsg := "Request Ended"
+	requestHostLogEntry := "host"
+	requestRemoteAddrLogEntry := "remoteAddr"
+	requestMethodLogEntry := "method"
+	requestURILogEntry := "requestURI"
+	requestProtoLogEntry := "proto"
+	requestUserAgentLogEntry := "userAgent"
+	requestDurationMilliseconds := "durationMs"
+
 	tctx.AddRequestHeaders(ctx, req)
 
-	mw := NewContextLoggerMiddleware(ctxl)
+	mw := logging.NewContextLoggerMiddleware(ctxl)
 	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
@@ -99,12 +110,12 @@ func TestContextLoggerHandlerWithoutContext(t *testing.T) {
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
 
-	cfg := LoggerConfig{w}
-	cfgs := []LoggerConfig{cfg}
-	l := NewZapLogger(cfgs)
-	ctxl := NewContextLogger(l)
+	cfg := logging.LoggerConfig{Output: w}
+	cfgs := []logging.LoggerConfig{cfg}
+	l := logging.NewZapLogger(cfgs)
+	ctxl := logging.NewContextLogger(l)
 
-	mw := NewContextLoggerMiddleware(ctxl)
+	mw := logging.NewContextLoggerMiddleware(ctxl)
 	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)

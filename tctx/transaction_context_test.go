@@ -1,4 +1,4 @@
-package tctx
+package tctx_test
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hugoluchessi/gotoolkit/tctx"
 )
 
 func TestCreateTransactionContext(t *testing.T) {
@@ -16,7 +17,7 @@ func TestCreateTransactionContext(t *testing.T) {
 	id, _ := uuid.NewUUID()
 	tms := time.Now()
 
-	nctx := Create(ctx, id, tms)
+	nctx := tctx.Create(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
@@ -28,13 +29,13 @@ func TestTransactionID(t *testing.T) {
 	id, _ := uuid.NewUUID()
 	tms := time.Now()
 
-	nctx := Create(ctx, id, tms)
+	nctx := tctx.Create(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
 	}
 
-	nid, _ := TransactionID(nctx)
+	nid, _ := tctx.TransactionID(nctx)
 
 	if nid != id {
 		t.Errorf("Wrong value for transaction id. Expected '%s' got '%s'.", id.String(), nid.String())
@@ -46,13 +47,13 @@ func TestTransactionStartTimestamp(t *testing.T) {
 	id, _ := uuid.NewUUID()
 	tms := time.Now()
 
-	nctx := Create(ctx, id, tms)
+	nctx := tctx.Create(ctx, id, tms)
 
 	if nctx == nil {
 		t.Error("[ctx] cannot be nil.")
 	}
 
-	ntms, _ := TransactionStartTimestamp(nctx)
+	ntms, _ := tctx.TransactionStartTimestamp(nctx)
 
 	if ntms != tms {
 		t.Errorf("Wrong value for transaction id. Expected '%s' got '%s'.", tms, ntms)
@@ -62,7 +63,7 @@ func TestTransactionStartTimestamp(t *testing.T) {
 func TestTransactionIDInvalid(t *testing.T) {
 	ctx := context.TODO()
 
-	_, err := TransactionID(ctx)
+	_, err := tctx.TransactionID(ctx)
 
 	if err == nil {
 		t.Error("transaction id should not be found")
@@ -73,7 +74,7 @@ func TestTransactionStartTimestampInvalid(t *testing.T) {
 	ctx := context.TODO()
 	tms := time.Now()
 
-	ntms, err := TransactionStartTimestamp(ctx)
+	ntms, err := tctx.TransactionStartTimestamp(ctx)
 
 	if err == nil {
 		t.Error("TransactionStartTimestamp id should not be found")
@@ -93,9 +94,9 @@ func TestAddRequestHeaders(t *testing.T) {
 	tid, _ := uuid.NewRandom()
 	tms := time.Now()
 
-	tctx := Create(ctx, tid, tms)
+	vtctx := tctx.Create(ctx, tid, tms)
 
-	_ = AddRequestHeaders(tctx, req)
+	_ = tctx.AddRequestHeaders(vtctx, req)
 
 	htid := req.Header.Get(tidHeaderKey)
 	htms, _ := strconv.ParseInt(req.Header.Get(tmsHeaderKey), 10, 64)
@@ -116,7 +117,7 @@ func TestAddRequestHeadersInvalidContext(t *testing.T) {
 
 	ctx := context.TODO()
 
-	err := AddRequestHeaders(ctx, req)
+	err := tctx.AddRequestHeaders(ctx, req)
 
 	if err == nil {
 		t.Error("Invalid context must generate error.")
@@ -127,12 +128,10 @@ func TestAddRequestHeadersInvalidContextWithTID(t *testing.T) {
 	m := "GET"
 	p := "/some_path"
 	req, _ := http.NewRequest(m, p, nil)
-	tid, _ := uuid.NewRandom()
 
 	ctx := context.TODO()
-	ctx = createTransactionIDContext(ctx, tid)
 
-	err := AddRequestHeaders(ctx, req)
+	err := tctx.AddRequestHeaders(ctx, req)
 
 	if err == nil {
 		t.Error("Invalid context must generate error.")
@@ -146,9 +145,9 @@ func TestAddResponseHeaders(t *testing.T) {
 	tid, _ := uuid.NewRandom()
 	tms := time.Now()
 
-	tctx := Create(ctx, tid, tms)
+	vtctx := tctx.Create(ctx, tid, tms)
 
-	_ = AddResponseHeaders(tctx, res)
+	_ = tctx.AddResponseHeaders(vtctx, res)
 
 	htid := res.Header().Get(tidHeaderKey)
 	htms, _ := strconv.ParseInt(res.Header().Get(tmsHeaderKey), 10, 64)
@@ -167,7 +166,7 @@ func TestAddResponseHeadersInvalidContext(t *testing.T) {
 
 	ctx := context.TODO()
 
-	err := AddResponseHeaders(ctx, res)
+	err := tctx.AddResponseHeaders(ctx, res)
 
 	if err == nil {
 		t.Error("Invalid context must generate error.")
@@ -176,12 +175,10 @@ func TestAddResponseHeadersInvalidContext(t *testing.T) {
 
 func TestAddResponseHeadersInvalidContextWithTID(t *testing.T) {
 	res := httptest.NewRecorder()
-	tid, _ := uuid.NewRandom()
 
 	ctx := context.TODO()
-	ctx = createTransactionIDContext(ctx, tid)
 
-	err := AddResponseHeaders(ctx, res)
+	err := tctx.AddResponseHeaders(ctx, res)
 
 	if err == nil {
 		t.Error("Invalid context must generate error.")
@@ -199,10 +196,10 @@ func TestFromRequestHeaders(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	tctx, _ := FromRequestHeaders(req)
+	vtctx, _ := tctx.FromRequestHeaders(req)
 
-	ctid, _ := TransactionID(tctx)
-	ctms, _ := TransactionStartTimestamp(tctx)
+	ctid, _ := tctx.TransactionID(vtctx)
+	ctms, _ := tctx.TransactionStartTimestamp(vtctx)
 
 	if ctid != tid {
 		t.Errorf("Invalid Transaction ID, expected '%s' got '%s'.", ctid.String(), tid.String())
@@ -223,7 +220,7 @@ func TestFromRequestHeadersEmptyTID(t *testing.T) {
 	req.Header.Add(tidHeaderKey, "")
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
@@ -240,7 +237,7 @@ func TestFromRequestHeadersIEmptyTMS(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, "")
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")
@@ -256,7 +253,7 @@ func TestFromRequestHeadersNoTIDHeader(t *testing.T) {
 
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
@@ -272,7 +269,7 @@ func TestFromRequestHeadersINoTMSHeader(t *testing.T) {
 
 	req.Header.Add(tidHeaderKey, tid.String())
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")
@@ -289,7 +286,7 @@ func TestFromRequestHeadersInvalidTID(t *testing.T) {
 	req.Header.Add(tidHeaderKey, "something")
 	req.Header.Add(tmsHeaderKey, strconv.FormatInt(tms.UnixNano(), 10))
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid uuid must generate error.")
@@ -306,7 +303,7 @@ func TestFromRequestHeadersInvalidTMS(t *testing.T) {
 	req.Header.Add(tidHeaderKey, tid.String())
 	req.Header.Add(tmsHeaderKey, "something")
 
-	_, err := FromRequestHeaders(req)
+	_, err := tctx.FromRequestHeaders(req)
 
 	if err == nil {
 		t.Error("Invalid date must generate error.")

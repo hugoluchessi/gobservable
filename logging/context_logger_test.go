@@ -1,4 +1,4 @@
-package logging
+package logging_test
 
 import (
 	"context"
@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hugoluchessi/gotoolkit/logging"
 	"github.com/hugoluchessi/gotoolkit/tctx"
 )
 
 func TestNewContextLogger(t *testing.T) {
-	l := NewMockLogger()
-	ctxl := NewContextLogger(l)
+	l := logging.NewMockLogger()
+	ctxl := logging.NewContextLogger(l)
 
 	if ctxl == nil {
 		t.Error("[ctxl] must not be nil.")
@@ -21,13 +22,13 @@ func TestNewContextLogger(t *testing.T) {
 }
 
 func TestContextLoggerLog(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
 	ts := time.Now()
 	ctx = tctx.Create(ctx, id, ts)
 
-	ctxl := NewContextLogger(l)
+	ctxl := logging.NewContextLogger(l)
 
 	msg := "message"
 	params := map[string]interface{}{
@@ -67,13 +68,13 @@ func TestContextLoggerLog(t *testing.T) {
 }
 
 func TestContextLoggerError(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 	ctx := context.TODO()
 	id, _ := uuid.NewUUID()
 	ts := time.Now()
 	ctx = tctx.Create(ctx, id, ts)
 
-	ctxl := NewContextLogger(l)
+	ctxl := logging.NewContextLogger(l)
 
 	msg := "message"
 	params := map[string]interface{}{
@@ -113,10 +114,10 @@ func TestContextLoggerError(t *testing.T) {
 }
 
 func TestContextLoggerLogSimpleContext(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 	ctx := context.TODO()
 
-	ctxl := NewContextLogger(l)
+	ctxl := logging.NewContextLogger(l)
 
 	msg := "message"
 	params := map[string]interface{}{

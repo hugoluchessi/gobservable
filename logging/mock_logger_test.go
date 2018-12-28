@@ -1,12 +1,14 @@
-package logging
+package logging_test
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/hugoluchessi/gotoolkit/logging"
 )
 
 func TestNewMockLogger(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 
 	if l == nil {
 		t.Error("[l] must not be nil.")
@@ -14,7 +16,7 @@ func TestNewMockLogger(t *testing.T) {
 }
 
 func TestMockLog(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 
 	l.Log(
 		"Message test",
@@ -44,7 +46,7 @@ func TestMockLog(t *testing.T) {
 }
 
 func TestMockError(t *testing.T) {
-	l := NewMockLogger()
+	l := logging.NewMockLogger()
 
 	l.Error(
 		"Message test",

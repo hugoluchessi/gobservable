@@ -1,32 +1,34 @@
-package logging
+package logging_test
 
 import (
 	"bufio"
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/hugoluchessi/gotoolkit/logging"
 )
 
 func TestNewZapLogger(t *testing.T) {
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
 
-	cfg := LoggerConfig{w}
-	cfgs := []LoggerConfig{cfg}
+	cfg := logging.LoggerConfig{w}
+	cfgs := []logging.LoggerConfig{cfg}
 
-	l := NewZapLogger(cfgs)
+	l := logging.NewZapLogger(cfgs)
 
 	if l == nil {
 		t.Error("[l] must not be nil.")
 	}
 }
 
-func createZapLoggingContext() (*bytes.Buffer, *ZapLogger) {
+func createZapLoggingContext() (*bytes.Buffer, *logging.ZapLogger) {
 	var b bytes.Buffer
-	cfg := LoggerConfig{&b}
-	cfgs := []LoggerConfig{cfg}
+	cfg := logging.LoggerConfig{&b}
+	cfgs := []logging.LoggerConfig{cfg}
 
-	l := NewZapLogger(cfgs)
+	l := logging.NewZapLogger(cfgs)
 
 	return &b, l
 }

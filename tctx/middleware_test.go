@@ -1,4 +1,4 @@
-package tctx
+package tctx_test
 
 import (
 	"net/http"
@@ -8,10 +8,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hugoluchessi/gotoolkit/tctx"
+)
+
+const (
+	tidHeaderKey = "GOTK-Transaction-Context-Id"
+	tmsHeaderKey = "GOTK-Transaction-Start-Timestamp"
 )
 
 func TestNewTransactionContextMiddleware(t *testing.T) {
-	mw := NewTransactionContextMiddleware()
+	mw := tctx.NewTransactionContextMiddleware()
 
 	if mw == nil {
 		t.Error("NewTransactionContextMiddleware cannot return nil.")
@@ -25,14 +31,14 @@ func TestContextLoggerHandler(t *testing.T) {
 	tid := uuid.New()
 	tms := time.Now()
 	ctx := req.Context()
-	ctx = Create(ctx, tid, tms)
+	ctx = tctx.Create(ctx, tid, tms)
 
-	AddRequestHeaders(ctx, req)
+	tctx.AddRequestHeaders(ctx, req)
 
 	h := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		ctid, _ := TransactionID(ctx)
-		ctms, _ := TransactionStartTimestamp(ctx)
+		ctid, _ := tctx.TransactionID(ctx)
+		ctms, _ := tctx.TransactionStartTimestamp(ctx)
 
 		if ctid != tid {
 			t.Errorf("Wrong Transaction ID should be '%s' go '%s'.", tid.String(), ctid.String())
@@ -43,7 +49,7 @@ func TestContextLoggerHandler(t *testing.T) {
 		}
 	})
 
-	mw := NewTransactionContextMiddleware()
+	mw := tctx.NewTransactionContextMiddleware()
 	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)
@@ -68,8 +74,8 @@ func TestContextLoggerHandlerWithoutHeaders(t *testing.T) {
 
 	h := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		ctid, _ := TransactionID(ctx)
-		ctms, _ := TransactionStartTimestamp(ctx)
+		ctid, _ := tctx.TransactionID(ctx)
+		ctms, _ := tctx.TransactionStartTimestamp(ctx)
 
 		if ctid.String() == "" {
 			t.Error("Transaction ID must not be empty.")
@@ -80,7 +86,7 @@ func TestContextLoggerHandlerWithoutHeaders(t *testing.T) {
 		}
 	})
 
-	mw := NewTransactionContextMiddleware()
+	mw := tctx.NewTransactionContextMiddleware()
 	mwh := mw.Handler(h)
 
 	mwh.ServeHTTP(res, req)

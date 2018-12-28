@@ -29,12 +29,12 @@
     "internal/exit",
     "zapcore"
   ]
-  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
-  version = "v1.8.0"
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66163ba0573a183d77fc30dce59c64e78213a96406bd81ce84c8887985add442"
+  inputs-digest = "e3edae876b7a768e423872ca54f0e08fb09eb51f15044a64856fa42a95ca8586"
   solver-name = "gps-cdcl"
   solver-version = 1

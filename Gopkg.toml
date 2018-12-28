@@ -28,6 +28,10 @@
   version = "~0.2"
   name = "github.com/google/uuid"
 
+[[constraint]]
+  version = "~1.9.1"
+  name = "go.uber.org/zap"
+
 [prune]
   go-tests = true
   unused-packages = true

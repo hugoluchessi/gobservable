@@ -10,12 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
-const tidNotFound = "Transaction ID not found."
-const tmsNotFound = "Transaction Started timestamp not found."
-const tidHeaderKey = "GOTK-Transaction-Context-Id"
-const tmsHeaderKey = "GOTK-Transaction-Start-Timestamp"
-const tidHeaderNotFound = "Transaction ID not found."
-const tmsHeaderNotFound = "Transaction Started timestamp not found."
+const (
+	tidNotFound       = "Transaction ID not found."
+	tmsNotFound       = "Transaction Started timestamp not found."
+	tidHeaderKey      = "GOTK-Transaction-Context-Id"
+	tmsHeaderKey      = "GOTK-Transaction-Start-Timestamp"
+	tidHeaderNotFound = "Transaction ID not found."
+	tmsHeaderNotFound = "Transaction Started timestamp not found."
+)
 
 type transactionIDKey struct{}
 type transactionStartTimestampKey struct{}
