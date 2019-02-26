@@ -3,7 +3,7 @@ package logging
 import (
 	"context"
 
-	"github.com/hugoluchessi/gotoolkit/tctx"
+	"github.com/hugoluchessi/gobservable/tctx"
 )
 
 type logFunc func(context.Context) interface{}

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hugoluchessi/gotoolkit/logging"
-	"github.com/hugoluchessi/gotoolkit/tctx"
+	"github.com/hugoluchessi/gobservable/logging"
+	"github.com/hugoluchessi/gobservable/tctx"
 )
 
 func TestNewContextLogger(t *testing.T) {

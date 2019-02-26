@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hugoluchessi/gotoolkit/gttime"
+	"github.com/hugoluchessi/gobservable/gttime"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hugoluchessi/gotoolkit/logging"
+	"github.com/hugoluchessi/gobservable/logging"
 )
 
 func TestNewZapLogger(t *testing.T) {

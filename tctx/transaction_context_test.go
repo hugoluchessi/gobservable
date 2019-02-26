@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hugoluchessi/gotoolkit/tctx"
+	"github.com/hugoluchessi/gobservable/tctx"
 )
 
 func TestCreateTransactionContext(t *testing.T) {

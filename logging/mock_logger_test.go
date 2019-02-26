@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hugoluchessi/gotoolkit/logging"
+	"github.com/hugoluchessi/gobservable/logging"
 )
 
 func TestNewMockLogger(t *testing.T) {

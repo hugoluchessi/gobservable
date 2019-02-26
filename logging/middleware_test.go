@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hugoluchessi/gotoolkit/logging"
-	"github.com/hugoluchessi/gotoolkit/tctx"
+	"github.com/hugoluchessi/gobservable/logging"
+	"github.com/hugoluchessi/gobservable/tctx"
 )
 
 func TestNewContextLoggerMiddleware(t *testing.T) {
@@ -122,7 +122,7 @@ func TestContextLoggerHandlerWithoutContext(t *testing.T) {
 
 	response := res.Result()
 
-	if response.StatusCode != http.StatusBadRequest {
-		t.Errorf("Request without transaction headers must fail")
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("Request without transaction headers must not fail")
 	}
 }

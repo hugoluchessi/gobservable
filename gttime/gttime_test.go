@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hugoluchessi/gotoolkit/gttime"
+	"github.com/hugoluchessi/gobservable/gttime"
 )
 
 func TestMilliseconds(t *testing.T) {
