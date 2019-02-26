@@ -1,2 +1,4 @@
-# gotoolkit
-Basic toolkit for go apps
+# gobservable
+basic observability toolkit for go
+
+## Doc TBD
