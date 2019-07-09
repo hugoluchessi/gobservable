@@ -1,4 +1,4 @@
-go-metrics
+metrics
 ==========
 
 This library provides a `metrics` package which can be used to instrument code, expose application metrics, and profile runtime performance in a flexible manner.
