@@ -8,7 +8,7 @@ import (
 
 	"regexp"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

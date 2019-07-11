@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 )
 
 // Sink provides a MetricSink that does in-memory aggregation

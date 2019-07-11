@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 )
 
 // MetricsSummary holds a roll-up of metrics info for a given interval

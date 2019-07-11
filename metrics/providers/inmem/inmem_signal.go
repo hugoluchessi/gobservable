@@ -10,7 +10,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 )
 
 // Signal is used to listen for a given signal, and when received,

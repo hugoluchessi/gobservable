@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 )
 
 func TestInmemSink(t *testing.T) {

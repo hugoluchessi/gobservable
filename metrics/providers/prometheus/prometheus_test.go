@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hugoluchessi/go-metrics"
+	"github.com/hugoluchessi/gobservable/metrics"
 	dto "github.com/prometheus/client_model/go"
 )
 
